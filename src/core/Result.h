@@ -1,14 +1,6 @@
 #ifndef RKL_RESULT_H
 #define RKL_RESULT_H
 
-/*
- * RoboKosonsoy Link (RKL)
- * Result codes
- *
- * Copyright (c) RoboKosonsoy Community
- * Licensed under the MIT License
- */
-
 #include <Arduino.h>
 
 namespace RKL
@@ -20,21 +12,21 @@ enum class Result : uint8_t
 
     TIMEOUT,
 
-    NOT_READY,
+    SERIAL_ERROR,
+
+    CRC_ERROR,
 
     INVALID_PARAMETER,
 
     BUFFER_OVERFLOW,
 
-    CRC_ERROR,
-
-    SERIAL_ERROR,
-
     CONFIG_ERROR,
+
+    NOT_READY,
 
     UNKNOWN_ERROR
 };
 
-} // namespace RKL
+}
 
-#endif // RKL_RESULT_H
+#endif

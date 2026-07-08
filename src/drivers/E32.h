@@ -2,7 +2,9 @@
 #define RKL_E32_H
 
 #include <Arduino.h>
+
 #include "Radio.h"
+#include "E32_Config.h"
 
 namespace RKL
 {
@@ -25,6 +27,12 @@ public:
     size_t receive(uint8_t* buffer, size_t length) override;
 
     Result waitReady(uint16_t timeout = 500) override;
+
+    bool readConfiguration(E32Config& config);
+
+    bool writeConfiguration(const E32Config& config);
+
+    bool getVersion(uint8_t version[4]);
 
     void setNormalMode();
 
