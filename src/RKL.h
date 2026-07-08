@@ -14,6 +14,7 @@
 // Core
 #include "core/Types.h"
 #include "core/Config.h"
+#include "core/Result.h"
 #include "core/CRC16.h"
 
 // Drivers
