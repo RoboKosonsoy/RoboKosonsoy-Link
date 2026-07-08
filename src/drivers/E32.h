@@ -1,11 +1,6 @@
 #ifndef RKL_E32_H
 #define RKL_E32_H
 
-/*
- * RoboKosonsoy Link (RKL)
- * EBYTE E32 Driver
- */
-
 #include <Arduino.h>
 #include "Radio.h"
 
@@ -15,26 +10,28 @@ namespace RKL
 class E32 : public Radio
 {
 public:
+
     E32(Stream& serial,
         uint8_t auxPin,
         uint8_t m0Pin,
         uint8_t m1Pin);
 
-    bool begin(uint32_t baudrate = 9600) override;
+    Result begin() override;
 
     bool available() override;
 
-    size_t send(const uint8_t* data, size_t length) override;
+    Result send(const uint8_t* data, size_t length) override;
 
     size_t receive(uint8_t* buffer, size_t length) override;
 
-    bool waitReady(uint16_t timeout = 500) override;
+    Result waitReady(uint16_t timeout = 500) override;
 
-    bool enterNormalMode();
+    void setNormalMode();
 
-    bool enterProgramMode();
+    void setProgramMode();
 
 private:
+
     Stream& _serial;
 
     uint8_t _auxPin;
@@ -42,6 +39,6 @@ private:
     uint8_t _m1Pin;
 };
 
-} // namespace RKL
+}
 
-#endif // RKL_E32_H
+#endif

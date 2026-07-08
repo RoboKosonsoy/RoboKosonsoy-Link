@@ -18,6 +18,7 @@
 #include "core/CRC16.h"
 
 // Drivers
+#include "drivers/Radio.h"
 #include "drivers/E32.h"
 
 // Protocol
