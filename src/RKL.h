@@ -14,5 +14,10 @@
 #include "drivers/E32.h"
 
 #include "protocol/Packet.h"
+#include "protocol/Serializer.h"
+#include "protocol/Parser.h"
+#include "protocol/Ack.h"
+#include "protocol/Retry.h"
+#include "protocol/Link.h"
 
 #endif

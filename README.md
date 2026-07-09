@@ -1,4 +1,4 @@
-# RoboKosonsoy Link (RKL)
+﻿# RoboKosonsoy Link (RKL)
 
 > Open-source long-range radio communication library for Arduino, ESP32 and EBYTE E32 LoRa modules.
 
@@ -7,6 +7,32 @@
 RoboKosonsoy Link (RKL) is an open-source communication library designed for reliable and low-latency wireless control of robots, RC aircraft, autonomous vehicles, and educational robotics projects.
 
 The library provides a high-level API for EBYTE E32 LoRa modules while hiding low-level configuration details. It is designed to be simple for beginners and flexible enough for advanced applications.
+
+## Sprint 3 Architecture
+
+The library is organized into three production-oriented layers:
+
+* `core` - fixed configuration, result codes, shared types and CRC16-CCITT.
+* `drivers` - radio abstraction plus the EBYTE E32-433T30D driver.
+* `protocol` - packet model, serializer, parser, ACK handling, retry policy and reliable link API.
+
+The code is written for Arduino C++17 without exceptions, dynamic allocation or `String`, keeping RAM usage small enough for Arduino Nano / ATmega328P.
+
+## Packet Format
+
+```text
+start byte | packet type | sequence id | payload length | payload | crc16
+```
+
+CRC16 is calculated over `packet type`, `sequence id`, `payload length` and `payload`.
+
+## Reliable Link
+
+`RKL::Link` provides:
+
+* `sendPacket()` with automatic sequence numbers, ACK wait and retry.
+* `receivePacket()` with timeout, CRC verification, automatic ACK response and duplicate detection.
+* Configurable retry count and ACK timeout through `RKL::RetryConfig`.
 
 ## Project Goals
 
@@ -67,8 +93,15 @@ Future targets:
 ```text
 docs/
 examples/
+  CRC16_Test/
+  CRC_Test/
+  E32_Test/
+  Packet_Test/
 hardware/
 src/
+  core/
+  drivers/
+  protocol/
 tests/
 ```
 
@@ -82,13 +115,13 @@ The project is under active development.
 
 ## Roadmap
 
-* v0.1 — Project foundation
-* v0.2 — E32 driver
-* v0.3 — Communication protocol
-* v0.4 — RC transmitter
-* v0.5 — RC receiver
-* v0.6 — Telemetry
-* v1.0 — Stable release
+* v0.1 - Project foundation
+* v0.2 - E32 driver
+* v0.3 - Communication protocol
+* v0.4 - RC transmitter
+* v0.5 - RC receiver
+* v0.6 - Telemetry
+* v1.0 вЂ” Stable release
 
 ## License
 

@@ -15,18 +15,25 @@ namespace RKL
 {
 
 //---------------------------------------------------------------------
+/**
+ * @file Config.h
+ * @brief Compile-time limits and defaults for RoboKosonsoy Link.
+ */
+
 // Protocol
 //---------------------------------------------------------------------
 
 constexpr uint8_t PROTOCOL_VERSION = 1;
 constexpr uint8_t START_BYTE       = 0xAA;
+constexpr uint8_t PACKET_HEADER_SIZE = 4;
+constexpr uint8_t CRC_SIZE = 2;
 
 //---------------------------------------------------------------------
 // Packet
 //---------------------------------------------------------------------
 
 constexpr uint8_t MAX_PAYLOAD_SIZE = 48;
-constexpr uint8_t MAX_PACKET_SIZE  = 64;
+constexpr uint8_t MAX_PACKET_SIZE  = PACKET_HEADER_SIZE + MAX_PAYLOAD_SIZE + CRC_SIZE;
 
 //---------------------------------------------------------------------
 // Timeouts (milliseconds)

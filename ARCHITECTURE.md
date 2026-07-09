@@ -1,114 +1,125 @@
-# RoboKosonsoy Link Architecture
+﻿# RoboKosonsoy Link Architecture
 
 ## Overview
 
-RoboKosonsoy Link (RKL) is designed as a layered communication library. Each layer has a single responsibility, making the project easy to maintain, extend, and test.
+RoboKosonsoy Link (RKL) is a layered Arduino communication library for reliable radio packets over EBYTE E32 modules.
 
-```
+```text
 Application
-      │
-      ▼
-RKL Protocol
-      │
-      ▼
-Radio Driver
-      │
-      ▼
-EBYTE E32 Module
+  -> RKL Link Protocol
+  -> Radio Driver Interface
+  -> EBYTE E32-433T30D
 ```
 
----
-
-# Design Principles
+## Design Principles
 
 * Modular architecture
 * Clear separation of responsibilities
 * Hardware abstraction
-* Platform independence
-* Low latency
-* High reliability
-* Easy debugging
-* Educational code style
+* No dynamic allocation
+* No `String`
+* No exceptions
+* Small RAM usage for Arduino Nano / ATmega328P
+* C++17 compatible with the Arduino framework
 
----
+## Layer 0 - Core
 
-# Library Layers
-
-## Layer 1 – Radio Driver
-
-Responsible for direct communication with supported radio modules.
-
-Responsibilities:
-
-* Configure E32 modules
-* Read/write configuration
-* Send raw bytes
-* Receive raw bytes
-* Switch operating modes
-* Wait for AUX
-* Detect communication errors
+Shared definitions and small primitives.
 
 Files:
 
+```text
+src/core/CRC16.h
+src/core/CRC16.cpp
+src/core/Config.h
+src/core/Types.h
+src/core/Result.h
+src/core/Error.h
 ```
-RKLE32.h
-RKLE32.cpp
+
+Responsibilities:
+
+* CRC16-CCITT calculation and verification
+* Protocol constants and packet limits
+* Packet, radio and link enums
+* Lightweight result/error reporting
+
+## Layer 1 - Drivers
+
+Hardware-facing radio abstractions.
+
+Files:
+
+```text
+src/drivers/Radio.h
+src/drivers/E32.h
+src/drivers/E32.cpp
+src/drivers/E32_Config.h
+src/drivers/E32_Config.cpp
 ```
 
----
+Responsibilities:
 
-## Layer 2 – RKL Protocol
+* Abstract raw radio send/receive operations
+* Initialize and control E32 pins
+* Switch E32 normal/program modes
+* Read/write E32 configuration
+* Wait for AUX readiness
 
-Provides a reliable communication protocol over the radio driver.
+## Layer 2 - Protocol
+
+Reliable packet transport over a `Radio` implementation.
+
+Files:
+
+```text
+src/protocol/Packet.h
+src/protocol/Packet.cpp
+src/protocol/Serializer.h
+src/protocol/Serializer.cpp
+src/protocol/Parser.h
+src/protocol/Parser.cpp
+src/protocol/Ack.h
+src/protocol/Ack.cpp
+src/protocol/Retry.h
+src/protocol/Retry.cpp
+src/protocol/Link.h
+src/protocol/Link.cpp
+```
+
+Packet format:
+
+```text
+start byte | packet type | sequence id | payload length | payload | crc16
+```
+
+CRC16 covers `packet type`, `sequence id`, `payload length` and `payload`.
 
 Responsibilities:
 
 * Packet creation
-* Packet parsing
-* CRC16 verification
-* Packet counters
-* ACK
-* Retransmission
-* Failsafe
-* Connection monitoring
+* Serialization and deserialization
+* CRC verification
+* Sequence numbers
+* ACK packets
+* Duplicate packet detection
+* Configurable retry count and timeout
+* Timeout-aware `sendPacket()` and `receivePacket()`
 
-Files:
+## Layer 3 - Application
 
-```
-RKL_Link.h
-RKL_Link.cpp
-RKL_Packet.h
-```
-
----
-
-## Layer 3 – Application
-
-User application.
+User sketches and higher-level applications.
 
 Examples:
 
-* RC transmitter
-* RC receiver
-* Robot control
-* Telemetry
-* Ground station
-
----
-
-# Project Structure
-
-```
-src/
-examples/
-docs/
-hardware/
-tests/
+```text
+examples/CRC_Test
+examples/CRC16_Test
+examples/E32_Test
+examples/Packet_Test
 ```
 
----
-
-# Supported Platforms
+## Supported Platforms
 
 Current:
 
@@ -116,14 +127,7 @@ Current:
 * Arduino Uno
 * ESP32
 
-Future:
-
-* STM32
-* RP2040
-
----
-
-# Supported Radio Modules
+## Supported Radio Modules
 
 Current:
 
@@ -133,25 +137,3 @@ Planned:
 
 * SX1276
 * SX1278
-
----
-
-# Communication Features
-
-* CRC16
-* Packet counter
-* ACK
-* Automatic retransmission
-* Failsafe
-* Telemetry
-
----
-
-# Development Workflow
-
-1. Design
-2. Documentation
-3. Implementation
-4. Testing
-5. Review
-6. Release

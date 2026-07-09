@@ -5,7 +5,7 @@
 
 #include "../core/Config.h"
 #include "../core/Types.h"
-#include "../core/CRC16.h"
+#include "../core/Result.h"
 
 namespace RKL
 {
@@ -21,13 +21,26 @@ struct Packet
 
     uint16_t crc = 0;
 
-    bool calculateCRC();
-    bool checkCRC();
+    /** @brief Reset packet fields and clear payload storage. */
+    void clear();
 
-    uint16_t size() const
-    {
-        return 6 + length;
-    }
+    /** @brief Calculate and store CRC16 over type, sequence, length and payload. */
+    bool calculateCRC();
+
+    /** @brief Verify the stored CRC16. */
+    bool checkCRC() const;
+
+    /** @brief Total serialized packet size in bytes. */
+    uint16_t packetSize() const;
+
+    /** @brief Set packet payload from a fixed byte buffer. */
+    Result setPayload(const uint8_t* data, uint8_t size);
+
+    /** @brief Compatibility wrapper around Serializer. */
+    bool serialize(uint8_t* buffer) const;
+
+    /** @brief Compatibility wrapper around Parser. */
+    bool deserialize(const uint8_t* buffer, uint16_t size);
 };
 
 }

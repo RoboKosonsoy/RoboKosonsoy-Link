@@ -47,7 +47,22 @@ Result E32::send(const uint8_t* data, size_t length)
 
 size_t E32::receive(uint8_t* buffer, size_t length)
 {
-    return _serial.readBytes(buffer, length);
+    if (buffer == nullptr || length == 0)
+        return 0;
+
+    size_t count = 0;
+
+    while (_serial.available() > 0 && count < length)
+    {
+        const int value = _serial.read();
+
+        if (value < 0)
+            break;
+
+        buffer[count++] = static_cast<uint8_t>(value);
+    }
+
+    return count;
 }
 
 Result E32::waitReady(uint16_t timeout)

@@ -14,6 +14,11 @@
 namespace RKL
 {
 
+/**
+ * @file Types.h
+ * @brief Common enums shared by drivers and protocol layers.
+ */
+
 // Supported radio modules
 enum class RadioType : uint8_t
 {
@@ -25,6 +30,7 @@ enum class PacketType : uint8_t
 {
     RC_CONTROL   = 0x01,
     ACK          = 0x02,
+    NACK         = 0x08,
     PING         = 0x03,
     TELEMETRY    = 0x04,
     CONFIG       = 0x05,
