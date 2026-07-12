@@ -1,5 +1,4 @@
 #include "Serializer.h"
-
 #include "../core/CRC16.h"
 
 namespace RKL
@@ -16,7 +15,6 @@ Result Serializer::serialize(Packet& packet,
         return Result::INVALID_PARAMETER;
 
     const uint16_t size = packet.packetSize();
-
     if (size > bufferSize || size > MAX_PACKET_SIZE)
         return Result::BUFFER_OVERFLOW;
 
@@ -34,6 +32,20 @@ Result Serializer::serialize(Packet& packet,
     buffer[PACKET_HEADER_SIZE + packet.length + 1] = static_cast<uint8_t>(packet.crc & 0xFF);
 
     written = size;
+
+#if RKL_DEBUG
+    RKL_LOGLN("");
+    RKL_LOGLN("========== TX FRAME ==========");
+    RKL_LOG("TYPE   : "); RKL_LOGLN((uint8_t)packet.type);
+    RKL_LOG("ID     : "); RKL_LOGLN(packet.id);
+    RKL_LOG("LENGTH : "); RKL_LOGLN(packet.length);
+    RKL_LOG("CRC    : "); RKL_LOGLN(packet.crc, HEX);
+    RKL_LOG("SIZE   : "); RKL_LOGLN(size);
+    RKL_LOG("HEX    : "); RKL_DebugHex(buffer, size);
+    RKL_LOGLN("==============================");
+    RKL_LOGLN("");
+#endif
+
     return Result::OK;
 }
 

@@ -2,16 +2,12 @@
 #define RKL_PARSER_H
 
 #include <Arduino.h>
-
 #include "../core/Result.h"
 #include "Packet.h"
 
 namespace RKL
 {
 
-/**
- * @brief Parses and validates the RKL wire packet format.
- */
 class Parser
 {
 public:
@@ -22,4 +18,4 @@ public:
 
 } // namespace RKL
 
-#endif // RKL_PARSER_H
+#endif

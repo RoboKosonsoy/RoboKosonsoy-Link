@@ -2,7 +2,6 @@
 #define RKL_LINK_H
 
 #include <Arduino.h>
-
 #include "../core/Config.h"
 #include "../core/Result.h"
 #include "../drivers/Radio.h"
@@ -13,9 +12,6 @@
 namespace RKL
 {
 
-/**
- * @brief Reliable packet link over a Radio driver.
- */
 class Link
 {
 public:
@@ -24,9 +20,11 @@ public:
     void setRetryConfig(const RetryConfig& config);
     uint8_t nextSequence();
 
+    // Основные методы
     Result sendPacket(Packet& packet);
-    Result receivePacket(Packet& packet, uint16_t timeout = LINK_TIMEOUT);
+    Result receivePacket(Packet& packet, uint16_t timeout = LINK_TIMEOUT, bool sendAck = true);
 
+    // Удобные обёртки
     Result send(Packet& packet);
     Result receive(Packet& packet);
 
@@ -45,4 +43,4 @@ private:
 
 } // namespace RKL
 
-#endif // RKL_LINK_H
+#endif

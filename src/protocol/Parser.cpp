@@ -1,5 +1,4 @@
 #include "Parser.h"
-
 #include "../core/CRC16.h"
 #include "../core/Config.h"
 
@@ -20,12 +19,10 @@ Result Parser::parse(const uint8_t* buffer,
         return Result::INVALID_PACKET;
 
     const uint8_t payloadLength = buffer[3];
-
     if (payloadLength > MAX_PAYLOAD_SIZE)
         return Result::BUFFER_OVERFLOW;
 
     const uint16_t expectedSize = PACKET_HEADER_SIZE + payloadLength + CRC_SIZE;
-
     if (size != expectedSize)
         return Result::INVALID_PACKET;
 
@@ -33,6 +30,7 @@ Result Parser::parse(const uint8_t* buffer,
         (static_cast<uint16_t>(buffer[PACKET_HEADER_SIZE + payloadLength]) << 8) |
         buffer[PACKET_HEADER_SIZE + payloadLength + 1];
 
+    // CRC считается по байтам: type, id, length, payload (без start)
     if (!CRC16::verify(buffer + 1, 3 + payloadLength, receivedCrc))
         return Result::CRC_ERROR;
 
@@ -46,6 +44,20 @@ Result Parser::parse(const uint8_t* buffer,
         memcpy(packet.payload, buffer + PACKET_HEADER_SIZE, payloadLength);
 
     packet.crc = receivedCrc;
+
+#if RKL_DEBUG
+    RKL_LOGLN("");
+    RKL_LOGLN("========== RX FRAME ==========");
+    RKL_LOG("TYPE   : "); RKL_LOGLN((uint8_t)packet.type);
+    RKL_LOG("ID     : "); RKL_LOGLN(packet.id);
+    RKL_LOG("LENGTH : "); RKL_LOGLN(packet.length);
+    RKL_LOG("CRC    : "); RKL_LOGLN(packet.crc, HEX);
+    RKL_LOG("SIZE   : "); RKL_LOGLN(size);
+    RKL_LOG("HEX    : "); RKL_DebugHex(buffer, size);
+    RKL_LOGLN("==============================");
+    RKL_LOGLN("");
+#endif
+
     return Result::OK;
 }
 

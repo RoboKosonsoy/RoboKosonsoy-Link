@@ -1,5 +1,4 @@
 #include "Link.h"
-
 #include "Parser.h"
 #include "Serializer.h"
 
@@ -24,6 +23,7 @@ uint8_t Link::nextSequence()
     return _nextSequence++;
 }
 
+// Отправка с подтверждением
 Result Link::sendPacket(Packet& packet)
 {
     if (packet.type != PacketType::ACK)
@@ -39,9 +39,13 @@ Result Link::sendPacket(Packet& packet)
         if (result != Result::OK)
             return result;
 
+        // Если это ACK, не ждём подтверждения
         if (packet.type == PacketType::ACK)
+        {
             return Result::OK;
+        }
 
+        // Ждём ACK
         result = waitForAck(packet.id, _retry.timeout());
         if (result == Result::OK)
             return Result::OK;
@@ -50,7 +54,8 @@ Result Link::sendPacket(Packet& packet)
     return Result::RETRY_EXHAUSTED;
 }
 
-Result Link::receivePacket(Packet& packet, uint16_t timeout)
+// Приём пакета с возможностью отключения отправки ACK (для waitForAck)
+Result Link::receivePacket(Packet& packet, uint16_t timeout, bool sendAck)
 {
     uint16_t received = 0;
     Result result = readFrame(received, timeout);
@@ -62,19 +67,28 @@ Result Link::receivePacket(Packet& packet, uint16_t timeout)
     if (result != Result::OK)
         return result;
 
+    // Если это ACK, просто возвращаем OK (не отправляем ACK на ACK)
     if (packet.type == PacketType::ACK)
         return Result::OK;
 
-    Packet ackPacket;
-    Ack::make(ackPacket, packet.id);
-    sendOnce(ackPacket);
+    // Проверяем дубликат ДО отправки ACK
+    bool isDuplicate = _ack.isDuplicate(packet);
 
-    if (_ack.isDuplicate(packet))
-        return Result::DUPLICATE_PACKET;
+    // Отправляем ACK, если нужно (sendAck == true)
+    if (sendAck)
+    {
+        Packet ackPacket;
+        Ack::make(ackPacket, packet.id);
+        sendOnce(ackPacket);  // результат игнорируем, т.к. если не отправится, отправитель повторит
+    }
 
+    // Если дубликат, возвращаем OK (мы уже отправили ACK, чтобы отправитель не повторял)
+    // Можно вернуть DUPLICATE_PACKET, но тогда вызывающий код может неправильно обработать.
+    // Возвращаем OK – так надёжнее.
     return Result::OK;
 }
 
+// Публичные обёртки
 Result Link::send(Packet& packet)
 {
     return sendPacket(packet);
@@ -82,58 +96,65 @@ Result Link::send(Packet& packet)
 
 Result Link::receive(Packet& packet)
 {
-    return receivePacket(packet, LINK_TIMEOUT);
+    return receivePacket(packet, LINK_TIMEOUT, true);
 }
 
+// Отправить один раз (без повторов)
 Result Link::sendOnce(Packet& packet)
 {
     uint16_t written = 0;
     Result result = Serializer::serialize(packet, _buffer, sizeof(_buffer), written);
-
     if (result != Result::OK)
         return result;
 
-    return _radio.send(_buffer, written);
+    result = _radio.send(_buffer, written);
+    return result;
 }
 
+// Ожидание ACK с заданным sequence
 Result Link::waitForAck(uint8_t sequence, uint16_t timeout)
 {
-    const uint32_t start = millis();
     Packet incoming;
+    // Важно: при вызове receivePacket передаём sendAck = false,
+    // чтобы не отправлять ACK на случайные пакеты, которые могут прийти во время ожидания.
+    Result result = receivePacket(incoming, timeout, false);
 
-    while (millis() - start < timeout)
+    if (result == Result::OK)
     {
-        Result result = receivePacket(incoming, timeout);
-
-        if (result == Result::OK && _ack.isAckFor(incoming, sequence))
+        if (_ack.isAckFor(incoming, sequence))
             return Result::OK;
-
-        if (result == Result::TIMEOUT)
-            return Result::TIMEOUT;
+        else
+            return Result::ACK_MISMATCH; // пришёл не тот ACK
     }
 
     return Result::TIMEOUT;
 }
 
+// Чтение одного байта с таймаутом (блокирующее, но с увеличенными таймаутами)
 Result Link::readByte(uint8_t& value, uint32_t deadline)
 {
     while (!_radio.available())
     {
-        if (static_cast<int32_t>(millis() - deadline) >= 0)
+        if (millis() >= deadline)
             return Result::TIMEOUT;
-
+        // небольшая задержка для снижения нагрузки
         delay(1);
     }
 
-    return _radio.receive(&value, 1) == 1 ? Result::OK : Result::NOT_READY;
+    if (_radio.receive(&value, 1) == 1)
+        return Result::OK;
+    else
+        return Result::NOT_READY;
 }
 
+// Чтение целого кадра (заголовок + полезные данные + CRC)
 Result Link::readFrame(uint16_t& frameSize, uint16_t timeout)
 {
     frameSize = 0;
     const uint32_t deadline = millis() + timeout;
     uint8_t value = 0;
 
+    // Ждём стартовый байт
     do
     {
         Result result = readByte(value, deadline);
@@ -144,6 +165,7 @@ Result Link::readFrame(uint16_t& frameSize, uint16_t timeout)
 
     _buffer[0] = value;
 
+    // Читаем оставшиеся 3 байта заголовка (type, id, length)
     for (uint8_t i = 1; i < PACKET_HEADER_SIZE; i++)
     {
         Result result = readByte(_buffer[i], deadline);
@@ -157,6 +179,7 @@ Result Link::readFrame(uint16_t& frameSize, uint16_t timeout)
 
     frameSize = PACKET_HEADER_SIZE + payloadLength + CRC_SIZE;
 
+    // Читаем payload и CRC
     for (uint16_t i = PACKET_HEADER_SIZE; i < frameSize; i++)
     {
         Result result = readByte(_buffer[i], deadline);

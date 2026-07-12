@@ -3,11 +3,7 @@
 namespace RKL
 {
 
-Ack::Ack()
-    : _hasLastSequence(false),
-      _lastSequence(0)
-{
-}
+Ack::Ack() : _hasLastSequence(false), _lastSequence(0) {}
 
 void Ack::reset()
 {

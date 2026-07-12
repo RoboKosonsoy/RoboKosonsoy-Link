@@ -2,7 +2,6 @@
 #define RKL_SERIALIZER_H
 
 #include <Arduino.h>
-
 #include "../core/Config.h"
 #include "../core/Result.h"
 #include "Packet.h"
@@ -10,9 +9,6 @@
 namespace RKL
 {
 
-/**
- * @brief Converts Packet objects into the wire format.
- */
 class Serializer
 {
 public:
@@ -24,4 +20,4 @@ public:
 
 } // namespace RKL
 
-#endif // RKL_SERIALIZER_H
+#endif

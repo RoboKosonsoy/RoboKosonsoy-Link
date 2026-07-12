@@ -2,24 +2,17 @@
 #define RKL_RETRY_H
 
 #include <Arduino.h>
-
 #include "../core/Config.h"
 
 namespace RKL
 {
 
-/**
- * @brief Retry policy for reliable packet delivery.
- */
 struct RetryConfig
 {
     uint8_t count = MAX_RETRY_COUNT;
     uint16_t timeout = ACK_TIMEOUT;
 };
 
-/**
- * @brief Small retry attempt counter.
- */
 class Retry
 {
 public:
@@ -39,4 +32,4 @@ private:
 
 } // namespace RKL
 
-#endif // RKL_RETRY_H
+#endif

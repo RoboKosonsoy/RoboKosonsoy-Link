@@ -20,4 +20,6 @@
 #include "protocol/Retry.h"
 #include "protocol/Link.h"
 
+#include "core/Debug.h"
+
 #endif

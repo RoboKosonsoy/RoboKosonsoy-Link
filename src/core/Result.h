@@ -6,9 +6,6 @@
 namespace RKL
 {
 
-/**
- * @brief Small status code used across the library.
- */
 enum class Result : uint8_t
 {
     OK = 0,
@@ -28,4 +25,4 @@ enum class Result : uint8_t
 
 } // namespace RKL
 
-#endif // RKL_RESULT_H
+#endif

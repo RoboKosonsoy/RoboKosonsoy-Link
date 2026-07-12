@@ -10,42 +10,18 @@ namespace RKL
 class Error
 {
 public:
+    Error() : _result(Result::OK) {}
+    explicit Error(Result result) : _result(result) {}
 
-    Error()
-        : _result(Result::OK)
-    {
-    }
-
-    explicit Error(Result result)
-        : _result(result)
-    {
-    }
-
-    Result code() const
-    {
-        return _result;
-    }
-
-    bool ok() const
-    {
-        return _result == Result::OK;
-    }
-
-    void clear()
-    {
-        _result = Result::OK;
-    }
-
-    void set(Result result)
-    {
-        _result = result;
-    }
+    Result code() const { return _result; }
+    bool ok() const { return _result == Result::OK; }
+    void clear() { _result = Result::OK; }
+    void set(Result result) { _result = result; }
 
 private:
-
     Result _result;
 };
 
-}
+} // namespace RKL
 
 #endif

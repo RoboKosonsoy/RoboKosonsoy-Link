@@ -1,5 +1,4 @@
 #include "Packet.h"
-
 #include "../core/CRC16.h"
 #include "Parser.h"
 #include "Serializer.h"
@@ -14,7 +13,6 @@ void Packet::clear()
     id = 0;
     length = 0;
     crc = 0;
-
     memset(payload, 0, sizeof(payload));
 }
 
@@ -32,7 +30,6 @@ bool Packet::calculateCRC()
         memcpy(buffer + 3, payload, length);
 
     crc = CRC16::calculate(buffer, 3 + length);
-
     return true;
 }
 
@@ -54,23 +51,20 @@ bool Packet::checkCRC() const
 
 uint16_t Packet::packetSize() const
 {
-    return PACKET_HEADER_SIZE + length + CRC_SIZE;
+    return PACKET_HEADER_SIZE + length + CRC_SIZE; // 4 + length + 2
 }
 
 Result Packet::setPayload(const uint8_t* data, uint8_t size)
 {
     if (size > MAX_PAYLOAD_SIZE)
         return Result::BUFFER_OVERFLOW;
-
     if (size > 0 && data == nullptr)
         return Result::INVALID_PARAMETER;
 
     length = size;
     memset(payload, 0, sizeof(payload));
-
     if (size > 0)
         memcpy(payload, data, size);
-
     return Result::OK;
 }
 
@@ -86,4 +80,4 @@ bool Packet::deserialize(const uint8_t* buffer, uint16_t size)
     return Parser::parse(buffer, size, *this) == Result::OK;
 }
 
-}
+} // namespace RKL

@@ -4,10 +4,7 @@ namespace RKL
 {
 
 Retry::Retry(const RetryConfig& config)
-    : _config(config),
-      _attempts(0)
-{
-}
+    : _config(config), _attempts(0) {}
 
 void Retry::configure(const RetryConfig& config)
 {
