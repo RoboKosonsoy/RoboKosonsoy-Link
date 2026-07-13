@@ -18,26 +18,24 @@ public:
     explicit Link(Radio& radio);
 
     void setRetryConfig(const RetryConfig& config);
-    uint8_t nextSequence();
+    uint16_t nextCounter();
 
-    // Основные методы
     Result sendPacket(Packet& packet);
     Result receivePacket(Packet& packet, uint16_t timeout = LINK_TIMEOUT, bool sendAck = true);
 
-    // Удобные обёртки
     Result send(Packet& packet);
     Result receive(Packet& packet);
 
 private:
     Result sendOnce(Packet& packet);
-    Result waitForAck(uint8_t sequence, uint16_t timeout);
+    Result waitForAck(uint16_t counter, uint16_t timeout);
     Result readByte(uint8_t& value, uint32_t deadline);
     Result readFrame(uint16_t& frameSize, uint16_t timeout);
 
     Radio& _radio;
     Ack _ack;
     Retry _retry;
-    uint8_t _nextSequence;
+    uint16_t _nextCounter;
     uint8_t _buffer[MAX_PACKET_SIZE];
 };
 

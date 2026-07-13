@@ -13,13 +13,13 @@ class Ack
 public:
     Ack();
     void reset();
-    bool isAckFor(const Packet& ackPacket, uint8_t sequence) const;
+    bool isAckFor(const Packet& ackPacket, uint16_t counter) const;
     bool isDuplicate(const Packet& packet);
-    static void make(Packet& packet, uint8_t sequence);
+    static void make(Packet& packet, uint16_t counter);
 
 private:
-    bool _hasLastSequence;
-    uint8_t _lastSequence;
+    bool _hasLastCounter;
+    uint16_t _lastCounter;
 };
 
 } // namespace RKL

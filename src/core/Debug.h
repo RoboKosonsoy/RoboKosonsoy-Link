@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#define RKL_DEBUG 1   // можно выключить, заменив на 0
+#define RKL_DEBUG 1
 
 #if RKL_DEBUG
 

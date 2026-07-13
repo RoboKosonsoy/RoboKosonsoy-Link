@@ -1,5 +1,5 @@
 #include "E32.h"
-#include "../core/Debug.h"   // <-- добавлено для отладки
+#include "../core/Debug.h"
 
 namespace RKL
 {
@@ -17,12 +17,20 @@ E32::E32(Stream& serial,
 
 Result E32::begin()
 {
+    Serial.println("E32::begin() - start");
     pinMode(_auxPin, INPUT);
     pinMode(_m0Pin, OUTPUT);
     pinMode(_m1Pin, OUTPUT);
+    Serial.println("Pins set");
 
     setNormalMode();
-    return waitReady();
+    Serial.println("Normal mode set");
+
+    Serial.println("Waiting for AUX...");
+    Result r = waitReady(2000);   // увеличенный таймаут
+    Serial.print("waitReady result: ");
+    Serial.println((int)r);
+    return r;
 }
 
 bool E32::available()
@@ -32,7 +40,6 @@ bool E32::available()
 
 Result E32::send(const uint8_t* data, size_t length)
 {
-    // Проверяем готовность перед отправкой (один раз)
     Result r = waitReady();
     if (r != Result::OK)
         return r;
@@ -46,16 +53,10 @@ Result E32::send(const uint8_t* data, size_t length)
     RKL_DebugHex(data, length);
 #endif
 
-    // Отправка
     if (_serial.write(data, length) != length)
         return Result::SERIAL_ERROR;
 
     _serial.flush();
-
-    // Не ждём повторно ready, так как данные уже в буфере UART
-    // (но можно оставить, если нужно убедиться, что модуль обработал)
-    // Для надёжности оставим, но уберём лишний waitReady.
-    // Мы уже проверили ready до отправки, поэтому возвращаем OK.
     return Result::OK;
 }
 
@@ -81,10 +82,13 @@ Result E32::waitReady(uint16_t timeout)
     while (digitalRead(_auxPin) == LOW)
     {
         if (millis() - start >= timeout)
+        {
+            Serial.println("AUX stayed LOW, timeout");
             return Result::TIMEOUT;
-        // Небольшая задержка для снижения нагрузки (можно убрать)
+        }
         delay(1);
     }
+    Serial.println("AUX became HIGH");
     return Result::OK;
 }
 
@@ -92,7 +96,7 @@ void E32::setNormalMode()
 {
     digitalWrite(_m0Pin, LOW);
     digitalWrite(_m1Pin, LOW);
-    delay(40); // небольшая задержка для переключения
+    delay(40);
 }
 
 void E32::setProgramMode()

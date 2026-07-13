@@ -3,18 +3,18 @@
 namespace RKL
 {
 
-Ack::Ack() : _hasLastSequence(false), _lastSequence(0) {}
+Ack::Ack() : _hasLastCounter(false), _lastCounter(0) {}
 
 void Ack::reset()
 {
-    _hasLastSequence = false;
-    _lastSequence = 0;
+    _hasLastCounter = false;
+    _lastCounter = 0;
 }
 
-bool Ack::isAckFor(const Packet& ackPacket, uint8_t sequence) const
+bool Ack::isAckFor(const Packet& ackPacket, uint16_t counter) const
 {
     return ackPacket.type == PacketType::ACK &&
-           ackPacket.id == sequence &&
+           ackPacket.counter == counter &&
            ackPacket.length == 0;
 }
 
@@ -23,19 +23,19 @@ bool Ack::isDuplicate(const Packet& packet)
     if (packet.type == PacketType::ACK)
         return false;
 
-    if (_hasLastSequence && packet.id == _lastSequence)
+    if (_hasLastCounter && packet.counter == _lastCounter)
         return true;
 
-    _hasLastSequence = true;
-    _lastSequence = packet.id;
+    _hasLastCounter = true;
+    _lastCounter = packet.counter;
     return false;
 }
 
-void Ack::make(Packet& packet, uint8_t sequence)
+void Ack::make(Packet& packet, uint16_t counter)
 {
     packet.clear();
     packet.type = PacketType::ACK;
-    packet.id = sequence;
+    packet.counter = counter;
     packet.length = 0;
     packet.calculateCRC();
 }

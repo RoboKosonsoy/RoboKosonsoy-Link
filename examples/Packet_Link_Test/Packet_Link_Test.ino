@@ -3,16 +3,10 @@
 
 SoftwareSerial Radio(10, 11);
 
-RKL::E32 e32(
-    Radio,
-    2,
-    3,
-    4
-);
-
+RKL::E32 e32(Radio, 2, 3, 4);
 RKL::Link link(e32);
 
-uint8_t sequence = 0;
+uint16_t sequence = 0;
 
 void setup()
 {
@@ -20,7 +14,7 @@ void setup()
     Radio.begin(9600);
 
     Serial.println();
-    Serial.println("=== Packet Link Test ===");
+    Serial.println("=== RTT Measurement (7-byte header) ===");
 
     if (e32.begin() != RKL::Result::OK)
     {
@@ -29,29 +23,28 @@ void setup()
     }
 
     Serial.println("E32 READY");
+    Serial.println("SEQ\tRTT(ms)\tRESULT");
 }
 
 void loop()
 {
     RKL::Packet packet;
-
     packet.clear();
 
     packet.type = RKL::PacketType::RC_CONTROL;
-    packet.id = sequence++;
+    packet.counter = sequence++;
     packet.length = 5;
-
     memcpy(packet.payload, "HELLO", 5);
+    packet.calculateCRC();
 
+    unsigned long startTime = millis();
     RKL::Result result = link.send(packet);
+    unsigned long rtt = millis() - startTime;
 
-    Serial.print("SEQ: ");
-    Serial.print(packet.id);
-
-    Serial.print("  CRC: ");
-    Serial.print(packet.crc, HEX);
-
-    Serial.print("  RESULT: ");
+    Serial.print(sequence - 1);
+    Serial.print("\t");
+    Serial.print(rtt);
+    Serial.print("\t");
     Serial.println(static_cast<int>(result));
 
     delay(1000);

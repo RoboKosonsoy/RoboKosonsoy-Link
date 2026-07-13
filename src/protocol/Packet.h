@@ -12,8 +12,10 @@ namespace RKL
 struct Packet
 {
     uint8_t start = START_BYTE;
+    uint8_t version = PROTOCOL_VERSION;
     PacketType type = PacketType::RC_CONTROL;
-    uint8_t id = 0;
+    uint8_t flags = 0;
+    uint16_t counter = 0;
     uint8_t length = 0;
     uint8_t payload[MAX_PAYLOAD_SIZE];
     uint16_t crc = 0;

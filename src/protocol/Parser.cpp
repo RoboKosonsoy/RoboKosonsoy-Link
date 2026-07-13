@@ -18,7 +18,10 @@ Result Parser::parse(const uint8_t* buffer,
     if (buffer[0] != START_BYTE)
         return Result::INVALID_PACKET;
 
-    const uint8_t payloadLength = buffer[3];
+    if (buffer[1] != PROTOCOL_VERSION)
+        return Result::INVALID_PACKET;
+
+    const uint8_t payloadLength = buffer[6];
     if (payloadLength > MAX_PAYLOAD_SIZE)
         return Result::BUFFER_OVERFLOW;
 
@@ -30,14 +33,25 @@ Result Parser::parse(const uint8_t* buffer,
         (static_cast<uint16_t>(buffer[PACKET_HEADER_SIZE + payloadLength]) << 8) |
         buffer[PACKET_HEADER_SIZE + payloadLength + 1];
 
-    // CRC считается по байтам: type, id, length, payload (без start)
-    if (!CRC16::verify(buffer + 1, 3 + payloadLength, receivedCrc))
+    uint8_t crcBuffer[MAX_PACKET_SIZE];
+    crcBuffer[0] = buffer[1];
+    crcBuffer[1] = buffer[2];
+    crcBuffer[2] = buffer[3];
+    crcBuffer[3] = buffer[4];
+    crcBuffer[4] = buffer[5];
+    crcBuffer[5] = buffer[6];
+    if (payloadLength > 0)
+        memcpy(crcBuffer + 6, buffer + PACKET_HEADER_SIZE, payloadLength);
+
+    if (!CRC16::verify(crcBuffer, 6 + payloadLength, receivedCrc))
         return Result::CRC_ERROR;
 
     packet.clear();
     packet.start = buffer[0];
-    packet.type = static_cast<PacketType>(buffer[1]);
-    packet.id = buffer[2];
+    packet.version = buffer[1];
+    packet.type = static_cast<PacketType>(buffer[2]);
+    packet.flags = buffer[3];
+    packet.counter = (static_cast<uint16_t>(buffer[4]) << 8) | buffer[5];
     packet.length = payloadLength;
 
     if (payloadLength > 0)
@@ -48,12 +62,14 @@ Result Parser::parse(const uint8_t* buffer,
 #if RKL_DEBUG
     RKL_LOGLN("");
     RKL_LOGLN("========== RX FRAME ==========");
-    RKL_LOG("TYPE   : "); RKL_LOGLN((uint8_t)packet.type);
-    RKL_LOG("ID     : "); RKL_LOGLN(packet.id);
-    RKL_LOG("LENGTH : "); RKL_LOGLN(packet.length);
-    RKL_LOG("CRC    : "); RKL_LOGLN(packet.crc, HEX);
-    RKL_LOG("SIZE   : "); RKL_LOGLN(size);
-    RKL_LOG("HEX    : "); RKL_DebugHex(buffer, size);
+    RKL_LOG("VER   : "); RKL_LOGLN(packet.version);
+    RKL_LOG("TYPE  : "); RKL_LOGLN((uint8_t)packet.type);
+    RKL_LOG("FLAGS : "); RKL_LOGLN(packet.flags);
+    RKL_LOG("COUNTER: "); RKL_LOGLN(packet.counter);
+    RKL_LOG("LEN   : "); RKL_LOGLN(packet.length);
+    RKL_LOG("CRC   : "); RKL_LOGLN(packet.crc, HEX);
+    RKL_LOG("SIZE  : "); RKL_LOGLN(size);
+    RKL_LOG("HEX   : "); RKL_DebugHex(buffer, size);
     RKL_LOGLN("==============================");
     RKL_LOGLN("");
 #endif
