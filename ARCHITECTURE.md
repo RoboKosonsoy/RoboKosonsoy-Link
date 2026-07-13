@@ -1,4 +1,5 @@
-﻿# RoboKosonsoy Link Architecture
+﻿markdown
+# RoboKosonsoy Link Architecture
 
 ## Overview
 
@@ -9,70 +10,78 @@ Application
   -> RKL Link Protocol
   -> Radio Driver Interface
   -> EBYTE E32-433T30D
-```
+Design Principles
+Modular architecture
 
-## Design Principles
+Clear separation of responsibilities
 
-* Modular architecture
-* Clear separation of responsibilities
-* Hardware abstraction
-* No dynamic allocation
-* No `String`
-* No exceptions
-* Small RAM usage for Arduino Nano / ATmega328P
-* C++17 compatible with the Arduino framework
+Hardware abstraction
 
-## Layer 0 - Core
+No dynamic allocation
 
+No String
+
+No exceptions
+
+Small RAM usage for Arduino Nano / ATmega328P
+
+C++17 compatible with the Arduino framework
+
+Layer 0 - Core
 Shared definitions and small primitives.
 
 Files:
 
-```text
+text
 src/core/CRC16.h
 src/core/CRC16.cpp
 src/core/Config.h
 src/core/Types.h
 src/core/Result.h
 src/core/Error.h
-```
-
+src/core/Debug.h
+src/core/Debug.cpp
 Responsibilities:
 
-* CRC16-CCITT calculation and verification
-* Protocol constants and packet limits
-* Packet, radio and link enums
-* Lightweight result/error reporting
+CRC16-CCITT calculation and verification
 
-## Layer 1 - Drivers
+Protocol constants and packet limits
 
+Packet, radio and link enums
+
+Lightweight result/error reporting
+
+Optional debug macros
+
+Layer 1 - Drivers
 Hardware-facing radio abstractions.
 
 Files:
 
-```text
+text
 src/drivers/Radio.h
 src/drivers/E32.h
 src/drivers/E32.cpp
 src/drivers/E32_Config.h
 src/drivers/E32_Config.cpp
-```
-
 Responsibilities:
 
-* Abstract raw radio send/receive operations
-* Initialize and control E32 pins
-* Switch E32 normal/program modes
-* Read/write E32 configuration
-* Wait for AUX readiness
+Abstract raw radio send/receive operations
 
-## Layer 2 - Protocol
+Initialize and control E32 pins
 
-Reliable packet transport over a `Radio` implementation.
+Switch E32 normal/program modes
+
+Read/write E32 configuration
+
+Wait for AUX readiness
+
+Layer 2 - Protocol
+Reliable packet transport over a Radio implementation.
 
 Files:
 
-```text
+text
 src/protocol/Packet.h
 src/protocol/Packet.cpp
 src/protocol/Serializer.h
@@ -85,55 +94,55 @@ src/protocol/Retry.h
 src/protocol/Retry.cpp
 src/protocol/Link.h
 src/protocol/Link.cpp
-```
+Packet format (7-byte header):
 
-Packet format:
-
-```text
-start byte | packet type | sequence id | payload length | payload | crc16
-```
-
-CRC16 covers `packet type`, `sequence id`, `payload length` and `payload`.
+text
+start | version | type | flags | counter (2 bytes) | length | payload | crc16
+CRC16 covers version, type, flags, counter, length and payload.
 
 Responsibilities:
 
-* Packet creation
-* Serialization and deserialization
-* CRC verification
-* Sequence numbers
-* ACK packets
-* Duplicate packet detection
-* Configurable retry count and timeout
-* Timeout-aware `sendPacket()` and `receivePacket()`
+Packet creation
 
-## Layer 3 - Application
+Serialization and deserialization
 
+CRC verification
+
+16-bit sequence numbers
+
+ACK packets
+
+Duplicate packet detection
+
+Configurable retry count and timeout
+
+Timeout-aware send() and receive()
+
+Layer 3 - Application
 User sketches and higher-level applications.
 
 Examples:
 
-```text
-examples/CRC_Test
+text
 examples/CRC16_Test
-examples/E32_Test
-examples/Packet_Test
-```
-
-## Supported Platforms
-
+examples/Packet_Link_Test
+examples/Packet_Link_Receiver
+Supported Platforms
 Current:
 
-* Arduino Nano
-* Arduino Uno
-* ESP32
+Arduino Nano
 
-## Supported Radio Modules
+Arduino Uno
 
+ESP32
+
+Supported Radio Modules
 Current:
 
-* EBYTE E32-433T30D
+EBYTE E32-433T30D
 
 Planned:
 
-* SX1276
-* SX1278
+SX1276
+
+SX1278
